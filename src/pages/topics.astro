@@ -1,0 +1,77 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import QuestionCard from '../components/QuestionCard.vue';
+import SearchBar from '../components/SearchBar.vue';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+const allQuestions = await getCollection('questions');
+const sortedQuestions = allQuestions.sort((a: CollectionEntry<'questions'>, b: CollectionEntry<'questions'>) => a.data.order - b.data.order);
+
+const categories = [...new Set(allQuestions.map((q: CollectionEntry<'questions'>) => q.data.category))] as string[];
+const questionsByCategory = categories.reduce((acc, category) => {
+  acc[category] = sortedQuestions.filter((q: CollectionEntry<'questions'>) => q.data.category === category);
+  return acc;
+}, {} as Record<string, CollectionEntry<'questions'>[]>);
+---
+
+<BaseLayout title="Все темы - JS Interview Prep">
+  <div class="container mx-auto px-4 py-12 max-w-6xl">
+    <div class="mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+        Все темы
+      </h1>
+      <p class="text-xl text-gray-400 mb-8">
+        Изучайте JavaScript по категориям и уровням сложности
+      </p>
+      <SearchBar client:load />
+    </div>
+
+    {categories.map((category: string) => (
+      <section id={category.toLowerCase().replace(/\s+/g, '-')} class="mb-16">
+        <div class="flex items-center mb-6">
+          <h2 class="text-2xl md:text-3xl font-bold text-gray-100">
+            {category}
+          </h2>
+          <span class="ml-4 px-3 py-1 bg-primary-500/20 text-primary-400 rounded-full text-sm font-medium border border-primary-500/30">
+            {questionsByCategory[category].length}
+          </span>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {questionsByCategory[category].map((question: CollectionEntry<'questions'>) => (
+            <QuestionCard
+              client:visible
+              title={question.data.title}
+              description={question.data.description}
+              url={`/questions/${question.slug}.html`}
+              difficulty={question.data.difficulty}
+              tags={question.data.tags}
+            />
+          ))}
+        </div>
+      </section>
+    ))}
+  </div>
+</BaseLayout>
+
+<script>
+  // Client-side search functionality
+  const searchBar = document.querySelector('input[type="text"]');
+  const questionCards = document.querySelectorAll('[data-question-card]');
+  
+  if (searchBar) {
+    searchBar.addEventListener('input', (e) => {
+      const query = (e.target as HTMLInputElement).value.toLowerCase();
+      
+      questionCards.forEach((card) => {
+        const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
+        const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
+        
+        if (title.includes(query) || description.includes(query)) {
+          (card as HTMLElement).style.display = '';
+        } else {
+          (card as HTMLElement).style.display = 'none';
+        }
+      });
+    });
+  }
+</script>

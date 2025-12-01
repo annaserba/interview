@@ -1,0 +1,117 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import QuestionCard from '../components/QuestionCard.vue';
+import { getCollection, type CollectionEntry } from 'astro:content';
+
+const allQuestions = await getCollection('questions');
+const sortedQuestions = allQuestions.sort((a: CollectionEntry<'questions'>, b: CollectionEntry<'questions'>) => a.data.order - b.data.order);
+const featuredQuestions = sortedQuestions.slice(0, 6);
+
+const categories = [...new Set(allQuestions.map((q: CollectionEntry<'questions'>) => q.data.category))] as string[];
+---
+
+<BaseLayout title="JS Interview Prep - Подготовка к собеседованию по JavaScript">
+  <div class="relative overflow-hidden">
+    <!-- Hero Section -->
+    <section class="relative py-20 px-4">
+      <div class="absolute inset-0 bg-gradient-to-br from-primary-600/10 via-transparent to-primary-800/10"></div>
+      <div class="container mx-auto max-w-6xl relative">
+        <div class="text-center">
+          <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-primary-400 via-primary-500 to-primary-600 bg-clip-text text-transparent">
+            Подготовка к собеседованию
+          </h1>
+          <p class="text-xl md:text-2xl text-gray-300 mb-8 max-w-3xl mx-auto">
+            Полное руководство по JavaScript с вопросами, ответами и примерами кода
+          </p>
+          <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a 
+              href="/topics.html" 
+              class="px-8 py-4 bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-lg font-semibold hover:from-primary-600 hover:to-primary-700 transition-all shadow-lg hover:shadow-primary-500/50 hover:scale-105"
+            >
+              Начать изучение
+            </a>
+            <a 
+              href="#featured" 
+              class="px-8 py-4 bg-gray-800 text-gray-100 rounded-lg font-semibold hover:bg-gray-700 transition-all border border-gray-700"
+            >
+              Популярные темы
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="py-12 px-4 bg-gray-800/50">
+      <div class="container mx-auto max-w-6xl">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="text-4xl font-bold text-primary-400 mb-2">{allQuestions.length}+</div>
+            <div class="text-gray-400">Вопросов</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-primary-400 mb-2">{categories.length}</div>
+            <div class="text-gray-400">Категорий</div>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl font-bold text-primary-400 mb-2">100%</div>
+            <div class="text-gray-400">Бесплатно</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Featured Questions -->
+    <section id="featured" class="py-16 px-4">
+      <div class="container mx-auto max-w-6xl">
+        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center">
+          Популярные вопросы
+        </h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {featuredQuestions.map((question: CollectionEntry<'questions'>) => (
+            <QuestionCard
+              client:visible
+              title={question.data.title}
+              description={question.data.description}
+              url={`/questions/${question.slug}.html`}
+              difficulty={question.data.difficulty}
+              tags={question.data.tags}
+            />
+          ))}
+        </div>
+        <div class="text-center mt-12">
+          <a 
+            href="/topics.html" 
+            class="inline-flex items-center text-primary-400 hover:text-primary-300 transition-colors text-lg group"
+          >
+            Смотреть все темы
+            <svg class="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Categories Section -->
+    <section class="py-16 px-4 bg-gray-800/30">
+      <div class="container mx-auto max-w-6xl">
+        <h2 class="text-3xl md:text-4xl font-bold mb-12 text-center">
+          Категории
+        </h2>
+        <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {categories.map((category: string) => (
+            <a 
+              href={`/topics.html#${category.toLowerCase().replace(/\s+/g, '-')}`}
+              class="p-6 bg-gray-800 rounded-lg border border-gray-700 hover:border-primary-500/50 transition-all hover:shadow-lg hover:shadow-primary-500/10 text-center group"
+            >
+              <div class="text-lg font-semibold text-gray-100 group-hover:text-primary-400 transition-colors">
+                {category}
+              </div>
+            </a>
+          ))}
+        </div>
+      </div>
+    </section>
+  </div>
+</BaseLayout>

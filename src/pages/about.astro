@@ -1,0 +1,88 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="О проекте - JS Interview Prep">
+  <div class="container mx-auto px-4 py-12 max-w-4xl">
+    <h1 class="text-4xl md:text-5xl font-bold mb-8 bg-gradient-to-r from-primary-400 to-primary-600 bg-clip-text text-transparent">
+      О проекте
+    </h1>
+
+    <div class="prose prose-lg prose-invert max-w-none">
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-100 mb-4">Цель проекта</h2>
+        <p class="text-gray-300 mb-4">
+          JS Interview Prep — это комплексный ресурс для подготовки к собеседованиям по JavaScript. 
+          Мы собрали наиболее часто задаваемые вопросы, разделили их по категориям и уровням сложности, 
+          чтобы помочь вам эффективно подготовиться к техническому интервью.
+        </p>
+      </section>
+
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-100 mb-4">Технологии</h2>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-primary-400 mb-2">Astro</h3>
+            <p class="text-gray-400 text-sm">Современный фреймворк для создания быстрых сайтов</p>
+          </div>
+          <div class="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-primary-400 mb-2">Vue 3</h3>
+            <p class="text-gray-400 text-sm">Интерактивные компоненты и реактивность</p>
+          </div>
+          <div class="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-primary-400 mb-2">Tailwind CSS</h3>
+            <p class="text-gray-400 text-sm">Современный и адаптивный дизайн</p>
+          </div>
+          <div class="p-4 bg-gray-800 rounded-lg border border-gray-700">
+            <h3 class="text-lg font-semibold text-primary-400 mb-2">MDX</h3>
+            <p class="text-gray-400 text-sm">Поддержка Markdown с компонентами</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="mb-12">
+        <h2 class="text-2xl font-bold text-gray-100 mb-4">Особенности</h2>
+        <ul class="space-y-3">
+          <li class="flex items-start">
+            <svg class="w-6 h-6 text-primary-400 mr-3 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-gray-300">Структурированные вопросы по категориям</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-6 h-6 text-primary-400 mr-3 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-gray-300">Уровни сложности для каждого вопроса</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-6 h-6 text-primary-400 mr-3 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-gray-300">Примеры кода с подсветкой синтаксиса</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-6 h-6 text-primary-400 mr-3 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-gray-300">Адаптивный дизайн для всех устройств</span>
+          </li>
+          <li class="flex items-start">
+            <svg class="w-6 h-6 text-primary-400 mr-3 mt-1 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+            <span class="text-gray-300">Быстрая загрузка и оптимизация производительности</span>
+          </li>
+        </ul>
+      </section>
+
+      <section>
+        <h2 class="text-2xl font-bold text-gray-100 mb-4">Контакты</h2>
+        <p class="text-gray-300">
+          Если у вас есть предложения по улучшению проекта или вы нашли ошибку, 
+          пожалуйста, создайте issue в репозитории проекта.
+        </p>
+      </section>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,7 +1,7 @@
 ---
 title: "Promise и async/await"
 description: "Работа с асинхронным кодом, обработка ошибок, Promise.all, Promise.race"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "medium"
 tags: ["promises", "async", "await", "asynchronous"]
 order: 6

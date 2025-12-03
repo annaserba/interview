@@ -1,7 +1,7 @@
 ---
 title: "Типы данных и приведение типов"
 description: "Разница между == и ===, явное и неявное преобразование типов"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "easy"
 tags: ["types", "coercion", "comparison"]
 order: 8

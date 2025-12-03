@@ -1,7 +1,7 @@
 ---
 title: "ES6+ возможности"
 description: "let/const, стрелочные функции, деструктуризация, rest/spread, шаблонные строки"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "easy"
 tags: ["es6", "modern-javascript", "syntax"]
 order: 9

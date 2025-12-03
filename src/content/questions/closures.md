@@ -1,7 +1,7 @@
 ---
 title: "Что такое замыкания (closures)?"
 description: "Объяснение концепции замыканий в JavaScript с примерами"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "medium"
 tags: ["closures", "scope", "functions"]
 order: 1

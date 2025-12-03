@@ -2,16 +2,29 @@
 import BaseLayout from '../layouts/BaseLayout.astro';
 import QuestionCard from '../components/QuestionCard.vue';
 import SearchBar from '../components/SearchBar.vue';
+import TopicFilter from '../components/TopicFilter.vue';
 import { getCollection, type CollectionEntry } from 'astro:content';
 
 const allQuestions = await getCollection('questions');
 const sortedQuestions = allQuestions.sort((a: CollectionEntry<'questions'>, b: CollectionEntry<'questions'>) => a.data.order - b.data.order);
 
 const categories = [...new Set(allQuestions.map((q: CollectionEntry<'questions'>) => q.data.category))] as string[];
+const difficulties = ['easy', 'medium', 'hard'];
+
 const questionsByCategory = categories.reduce((acc, category) => {
   acc[category] = sortedQuestions.filter((q: CollectionEntry<'questions'>) => q.data.category === category);
   return acc;
 }, {} as Record<string, CollectionEntry<'questions'>[]>);
+
+// Передаём все вопросы для клиентской фильтрации
+const questionsData = sortedQuestions.map(q => ({
+  slug: q.slug,
+  title: q.data.title,
+  description: q.data.description,
+  category: q.data.category,
+  difficulty: q.data.difficulty,
+  tags: q.data.tags
+}));
 ---
 
 <BaseLayout title="Все темы - JS Interview Prep">
@@ -26,52 +39,147 @@ const questionsByCategory = categories.reduce((acc, category) => {
       <SearchBar client:load />
     </div>
 
-    {categories.map((category: string) => (
-      <section id={category.toLowerCase().replace(/\s+/g, '-')} class="mb-16">
-        <div class="flex items-center mb-6">
-          <h2 class="text-2xl md:text-3xl font-bold text-gray-100">
-            {category}
-          </h2>
-          <span class="ml-4 px-3 py-1 bg-primary-500/20 text-primary-400 rounded-full text-sm font-medium border border-primary-500/30">
-            {questionsByCategory[category].length}
-          </span>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {questionsByCategory[category].map((question: CollectionEntry<'questions'>) => (
-            <QuestionCard
-              client:visible
-              title={question.data.title}
-              description={question.data.description}
-              url={`/questions/${question.slug}.html`}
-              difficulty={question.data.difficulty}
-              tags={question.data.tags}
-            />
-          ))}
-        </div>
-      </section>
-    ))}
+    <!-- Фильтры -->
+    <TopicFilter 
+      client:load 
+      categories={categories}
+      difficulties={difficulties}
+    />
+
+    <!-- Контейнер для вопросов -->
+    <div id="questions-container">
+      {categories.map((category: string) => (
+        <section 
+          id={category.toLowerCase().replace(/\s+/g, '-')} 
+          class="mb-16 category-section"
+          data-category={category}
+        >
+          <div class="flex items-center mb-6">
+            <h2 class="text-2xl md:text-3xl font-bold text-gray-100">
+              {category}
+            </h2>
+            <span class="ml-4 px-3 py-1 bg-primary-500/20 text-primary-400 rounded-full text-sm font-medium border border-primary-500/30 category-count">
+              {questionsByCategory[category].length}
+            </span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 questions-grid">
+            {questionsByCategory[category].map((question: CollectionEntry<'questions'>) => (
+              <div 
+                class="question-item"
+                data-category={question.data.category}
+                data-difficulty={question.data.difficulty}
+              >
+                <QuestionCard
+                  client:visible
+                  title={question.data.title}
+                  description={question.data.description}
+                  url={`/questions/${question.slug}.html`}
+                  difficulty={question.data.difficulty}
+                  tags={question.data.tags}
+                />
+              </div>
+            ))}
+          </div>
+        </section>
+      ))}
+    </div>
+
+    <!-- Сообщение когда нет результатов -->
+    <div id="no-results" class="hidden text-center py-16">
+      <div class="text-6xl mb-4">🔍</div>
+      <h3 class="text-2xl font-bold text-gray-300 mb-2">Ничего не найдено</h3>
+      <p class="text-gray-400">Попробуйте изменить фильтры или поисковый запрос</p>
+    </div>
   </div>
 </BaseLayout>
 
 <script>
-  // Client-side search functionality
-  const searchBar = document.querySelector('input[type="text"]');
-  const questionCards = document.querySelectorAll('[data-question-card]');
-  
-  if (searchBar) {
-    searchBar.addEventListener('input', (e) => {
-      const query = (e.target as HTMLInputElement).value.toLowerCase();
-      
-      questionCards.forEach((card) => {
-        const title = card.querySelector('h3')?.textContent?.toLowerCase() || '';
-        const description = card.querySelector('p')?.textContent?.toLowerCase() || '';
-        
-        if (title.includes(query) || description.includes(query)) {
-          (card as HTMLElement).style.display = '';
-        } else {
-          (card as HTMLElement).style.display = 'none';
-        }
-      });
+  // Client-side filtering functionality
+  let currentFilters = {
+    category: null as string | null,
+    difficulty: null as string | null,
+    search: ''
+  };
+
+  function applyFilters() {
+    const questionItems = document.querySelectorAll('.question-item');
+    const categorySections = document.querySelectorAll('.category-section');
+    const noResults = document.getElementById('no-results');
+    let visibleCount = 0;
+
+    // Скрыть все секции сначала
+    categorySections.forEach(section => {
+      (section as HTMLElement).style.display = 'none';
     });
+
+    questionItems.forEach((item) => {
+      const category = item.getAttribute('data-category');
+      const difficulty = item.getAttribute('data-difficulty');
+      const title = item.querySelector('h3')?.textContent?.toLowerCase() || '';
+      const description = item.querySelector('p')?.textContent?.toLowerCase() || '';
+
+      let visible = true;
+
+      // Фильтр по категории
+      if (currentFilters.category && category !== currentFilters.category) {
+        visible = false;
+      }
+
+      // Фильтр по сложности
+      if (currentFilters.difficulty && difficulty !== currentFilters.difficulty) {
+        visible = false;
+      }
+
+      // Фильтр по поиску
+      if (currentFilters.search) {
+        const searchLower = currentFilters.search.toLowerCase();
+        if (!title.includes(searchLower) && !description.includes(searchLower)) {
+          visible = false;
+        }
+      }
+
+      (item as HTMLElement).style.display = visible ? '' : 'none';
+      if (visible) {
+        visibleCount++;
+        // Показать родительскую секцию
+        const parentSection = item.closest('.category-section');
+        if (parentSection) {
+          (parentSection as HTMLElement).style.display = '';
+        }
+      }
+    });
+
+    // Обновить счётчики категорий
+    categorySections.forEach(section => {
+      const visibleItems = section.querySelectorAll('.question-item:not([style*="display: none"])');
+      const countElement = section.querySelector('.category-count');
+      if (countElement) {
+        countElement.textContent = visibleItems.length.toString();
+      }
+    });
+
+    // Показать/скрыть сообщение "ничего не найдено"
+    if (noResults) {
+      noResults.style.display = visibleCount === 0 ? 'block' : 'none';
+    }
   }
+
+  // Слушать события фильтрации
+  document.addEventListener('DOMContentLoaded', () => {
+    // Поиск
+    const searchBar = document.querySelector('input[type="text"]');
+    if (searchBar) {
+      searchBar.addEventListener('input', (e) => {
+        currentFilters.search = (e.target as HTMLInputElement).value;
+        applyFilters();
+      });
+    }
+
+    // Фильтры (через custom event от Vue компонента)
+    window.addEventListener('topic-filter', ((e: CustomEvent) => {
+      currentFilters.category = e.detail.category;
+      currentFilters.difficulty = e.detail.difficulty;
+      applyFilters();
+    }) as EventListener);
+  });
 </script>

@@ -1,7 +1,7 @@
 ---
 title: "Event Loop и асинхронность"
 description: "Call stack, Web APIs, callback queue, microtasks и macrotasks"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "hard"
 tags: ["event-loop", "async", "promises", "microtasks"]
 order: 4

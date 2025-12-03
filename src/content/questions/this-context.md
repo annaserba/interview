@@ -1,7 +1,7 @@
 ---
 title: "Контекст this в JavaScript"
 description: "Как определяется this в разных ситуациях: функции, методы, стрелочные функции, bind/call/apply"
-category: "Основы JavaScript"
+category: "JavaScript"
 difficulty: "medium"
 tags: ["this", "context", "bind", "call", "apply"]
 order: 5

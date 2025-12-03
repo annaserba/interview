@@ -1,7 +1,7 @@
 ---
 title: "Безопасность веб-приложений"
 description: "XSS, CSRF, защита от атак, безопасное хранение данных"
-category: "Браузерные API"
+category: "JavaScript"
 difficulty: "medium"
 tags: ["security", "xss", "csrf", "safety"]
 order: 14

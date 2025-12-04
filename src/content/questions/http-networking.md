@@ -38,6 +38,22 @@ Content-Type: application/json
 3. **Пустая строка**: разделитель
 4. **Тело**: данные (опционально)
 
+### Тело запроса (Request Body)
+
+**Методы с body:** POST, PUT, PATCH  
+**Методы без body:** GET, DELETE, HEAD, OPTIONS
+
+**Форматы:**
+- `application/json` — JSON.stringify(data)
+- `multipart/form-data` — FormData (для файлов)
+- `application/x-www-form-urlencoded` — URLSearchParams
+
+**Частые ошибки:**
+- ❌ Забыть JSON.stringify для JSON
+- ❌ Указывать Content-Type для FormData (браузер добавит сам)
+- ❌ Отправлять body в GET запросе
+- ❌ Несоответствие Content-Type и данных
+
 ### Структура HTTP ответа
 
 ```
@@ -54,102 +70,70 @@ Set-Cookie: session=abc123
 
 ### GET
 
-Получение данных. Идемпотентный, безопасный.
+**Назначение:** Получение данных без изменения состояния.
 
+**Характеристики:**
+- ✅ Идемпотентный, безопасный, кэшируемый
+- 🔗 Параметры в URL
+- 📚 Сохраняется в истории браузера
+
+**Пример:**
 ```javascript
-// Получить список пользователей
-fetch('https://api.example.com/users')
-  .then(response => response.json())
-  .then(data => console.log(data))
-
-// С query параметрами
-fetch('https://api.example.com/users?page=1&limit=10')
+const params = new URLSearchParams({ page: 1, limit: 10 })
+fetch(`https://api.example.com/users?${params}`)
 ```
+
+**Когда использовать:**
+- ✅ Получение данных, поиск, фильтрация, пагинация
+- ❌ Чувствительные данные, изменение данных, большие объёмы (>2KB)
 
 ### POST
 
-Создание ресурса. Не идемпотентный.
+**Назначение:** Создание или обработка ресурса.
 
+**Характеристики:**
+- ❌ Не идемпотентный, не безопасный, не кэшируемый
+- 🔒 Данные в теле запроса
+- 🔐 Безопаснее для чувствительных данных
+
+**Пример:**
 ```javascript
 fetch('https://api.example.com/users', {
   method: 'POST',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    name: 'John',
-    email: 'john@example.com'
-  })
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name: 'John', email: 'john@example.com' })
 })
 ```
 
-### PUT
+**Когда использовать:**
+- ✅ Создание ресурсов, отправка форм, загрузка файлов, аутентификация
+- ❌ Получение данных (используйте GET)
+- Обновление существующих ресурсов (используйте PUT/PATCH)
+- Удаление (используйте DELETE)
 
-Полное обновление ресурса. Идемпотентный.
+### GET vs POST: Сравнение
 
-```javascript
-fetch('https://api.example.com/users/1', {
-  method: 'PUT',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    id: 1,
-    name: 'John Updated',
-    email: 'john.new@example.com'
-  })
-})
-```
+| Характеристика | GET | POST |
+|----------------|-----|------|
+| **Назначение** | Получение данных | Отправка данных |
+| **Данные** | В URL (query string) | В теле запроса |
+| **Идемпотентность** | ✅ Да | ❌ Нет |
+| **Безопасность** | ✅ Да (не меняет данные) | ❌ Нет (меняет данные) |
+| **Кэширование** | ✅ Да | ❌ Нет |
+| **История браузера** | ✅ Сохраняется | ❌ Не сохраняется |
+| **Закладки** | ✅ Можно | ❌ Нельзя |
+| **Лимит данных** | ~2KB (URL limit) | Нет лимита |
+| **Видимость данных** | В URL (видно всем) | В теле (скрыто) |
+| **Чувствительные данные** | ❌ Нет | ✅ Да |
+| **CORS Preflight** | ❌ Нет | ✅ Да (для JSON) |
 
-### PATCH
+### Другие HTTP методы
 
-Частичное обновление ресурса.
-
-```javascript
-fetch('https://api.example.com/users/1', {
-  method: 'PATCH',
-  headers: {
-    'Content-Type': 'application/json'
-  },
-  body: JSON.stringify({
-    name: 'John Updated'
-  })
-})
-```
-
-### DELETE
-
-Удаление ресурса. Идемпотентный.
-
-```javascript
-fetch('https://api.example.com/users/1', {
-  method: 'DELETE'
-})
-```
-
-### OPTIONS
-
-Получение доступных методов для ресурса. Используется в CORS preflight.
-
-```javascript
-fetch('https://api.example.com/users', {
-  method: 'OPTIONS'
-})
-```
-
-### HEAD
-
-Как GET, но без тела ответа. Для проверки существования ресурса.
-
-```javascript
-fetch('https://api.example.com/users/1', {
-  method: 'HEAD'
-})
-  .then(response => {
-    console.log('Exists:', response.ok)
-    console.log('Content-Length:', response.headers.get('Content-Length'))
-  })
-```
+**PUT** — полное обновление ресурса (идемпотентный)  
+**PATCH** — частичное обновление ресурса  
+**DELETE** — удаление ресурса (идемпотентный)  
+**HEAD** — как GET, но без тела ответа  
+**OPTIONS** — получение доступных методов (CORS preflight)
 
 ## HTTP статус-коды
 
@@ -195,235 +179,67 @@ fetch('https://api.example.com/users/1', {
 
 ### Request Headers
 
-```javascript
-fetch('https://api.example.com/users', {
-  headers: {
-    // Аутентификация
-    'Authorization': 'Bearer token123',
-    
-    // Тип контента
-    'Content-Type': 'application/json',
-    
-    // Принимаемые форматы
-    'Accept': 'application/json',
-    
-    // Язык
-    'Accept-Language': 'ru-RU,ru;q=0.9,en;q=0.8',
-    
-    // Кэширование
-    'Cache-Control': 'no-cache',
-    
-    // User Agent
-    'User-Agent': 'MyApp/1.0',
-    
-    // Referer
-    'Referer': 'https://example.com/page',
-    
-    // CORS
-    'Origin': 'https://example.com'
-  }
-})
-```
+- `Authorization` — аутентификация (Bearer token)
+- `Content-Type` — тип данных (application/json, multipart/form-data)
+- `Accept` — принимаемые форматы
+- `Cache-Control` — управление кэшем
+- `User-Agent` — информация о клиенте
 
 ### Response Headers
 
-```javascript
-// Сервер устанавливает заголовки
-res.setHeader('Content-Type', 'application/json')
-res.setHeader('Cache-Control', 'public, max-age=3600')
-res.setHeader('ETag', '"abc123"')
-res.setHeader('Last-Modified', 'Wed, 21 Oct 2024 07:28:00 GMT')
-res.setHeader('Set-Cookie', 'session=abc123; HttpOnly; Secure')
-res.setHeader('Access-Control-Allow-Origin', '*')
-
-// Чтение заголовков ответа
-fetch('https://api.example.com/users')
-  .then(response => {
-    console.log('Content-Type:', response.headers.get('Content-Type'))
-    console.log('Cache-Control:', response.headers.get('Cache-Control'))
-    console.log('ETag:', response.headers.get('ETag'))
-    
-    return response.json()
-  })
-```
-
-### Важные заголовки
-
-**Content-Type:**
-```
-application/json
-application/x-www-form-urlencoded
-multipart/form-data
-text/html
-text/plain
-```
-
-**Cache-Control:**
-```
-no-cache          // Проверять с сервером
-no-store          // Не кэшировать
-public            // Можно кэшировать везде
-private           // Только в браузере
-max-age=3600      // Время жизни в секундах
-must-revalidate   // Проверять после истечения
-```
-
-**CORS заголовки:**
-```
-Access-Control-Allow-Origin: *
-Access-Control-Allow-Methods: GET, POST, PUT, DELETE
-Access-Control-Allow-Headers: Content-Type, Authorization
-Access-Control-Max-Age: 86400
-Access-Control-Allow-Credentials: true
-```
+- `Content-Type` — тип ответа
+- `Cache-Control` — правила кэширования (no-cache, max-age=3600)
+- `ETag` — хэш ресурса для валидации
+- `Set-Cookie` — установка cookies
+- `Access-Control-Allow-Origin` — CORS
 
 ## CORS (Cross-Origin Resource Sharing)
 
-### Что такое CORS?
+Механизм безопасности браузера для кросс-доменных запросов.
 
-Механизм безопасности браузера, ограничивающий запросы между разными доменами.
-
-### Simple Request
-
-Не требует preflight запроса:
+**Simple Request** (без preflight):
 - Методы: GET, HEAD, POST
-- Заголовки: Accept, Accept-Language, Content-Language, Content-Type
-- Content-Type: application/x-www-form-urlencoded, multipart/form-data, text/plain
+- Content-Type: form-data, urlencoded, text/plain
 
-```javascript
-// Simple request
-fetch('https://api.example.com/users')
-  .then(response => response.json())
+**Preflight Request** (с OPTIONS):
+- Кастомные заголовки (Authorization)
+- Content-Type: application/json
+- Методы: PUT, DELETE, PATCH
+
+**Сервер должен ответить:**
 ```
-
-### Preflight Request
-
-Для сложных запросов браузер сначала отправляет OPTIONS:
-
-```javascript
-// Браузер автоматически отправит OPTIONS
-fetch('https://api.example.com/users', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': 'Bearer token'
-  },
-  body: JSON.stringify({ name: 'John' })
-})
-
-// Сервер должен ответить на OPTIONS:
-// Access-Control-Allow-Origin: https://example.com
-// Access-Control-Allow-Methods: POST
-// Access-Control-Allow-Headers: Content-Type, Authorization
-```
-
-### Настройка CORS на сервере
-
-```javascript
-// Express.js
-const cors = require('cors')
-
-// Разрешить все домены
-app.use(cors())
-
-// Настроить конкретные домены
-app.use(cors({
-  origin: ['https://example.com', 'https://app.example.com'],
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true,
-  maxAge: 86400
-}))
-
-// Вручную
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', req.headers.origin)
-  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE')
-  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  res.header('Access-Control-Allow-Credentials', 'true')
-  
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200)
-  }
-  
-  next()
-})
+Access-Control-Allow-Origin: https://example.com
+Access-Control-Allow-Methods: GET, POST, PUT
+Access-Control-Allow-Headers: Content-Type, Authorization
 ```
 
 ## Cookies
 
-### Установка Cookie
+**Атрибуты:**
+- `HttpOnly` — защита от XSS (недоступна JS)
+- `Secure` — только HTTPS
+- `SameSite` — защита от CSRF (Strict/Lax/None)
+- `Max-Age` — время жизни в секундах
 
+**Установка:**
 ```javascript
-// Сервер
-res.setHeader('Set-Cookie', [
-  'session=abc123; HttpOnly; Secure; SameSite=Strict; Max-Age=3600',
-  'theme=dark; Path=/; Max-Age=31536000'
-])
-
-// Клиент (JavaScript)
 document.cookie = 'theme=dark; max-age=31536000; path=/'
-```
-
-### Атрибуты Cookie
-
-- **HttpOnly** — недоступна для JavaScript (защита от XSS)
-- **Secure** — только через HTTPS
-- **SameSite** — защита от CSRF
-  - `Strict` — только same-site запросы
-  - `Lax` — same-site + top-level navigation
-  - `None` — все запросы (требует Secure)
-- **Max-Age** — время жизни в секундах
-- **Expires** — дата истечения
-- **Domain** — домен
-- **Path** — путь
-
-### Чтение Cookie
-
-```javascript
-// Парсинг cookies
-function getCookie(name) {
-  const value = `; ${document.cookie}`
-  const parts = value.split(`; ${name}=`)
-  if (parts.length === 2) {
-    return parts.pop().split(';').shift()
-  }
-}
-
-const theme = getCookie('theme')
 ```
 
 ## HTTPS
 
-### Что такое HTTPS?
+HTTP + TLS/SSL шифрование.
 
-HTTP + TLS/SSL шифрование. Защищает от:
-- Перехвата данных (Man-in-the-Middle)
+**Защищает от:**
+- Man-in-the-Middle атак
+- Перехвата данных
 - Подмены данных
-- Прослушивания
 
-### Процесс установки соединения
-
-1. **Client Hello** — клиент отправляет поддерживаемые алгоритмы
-2. **Server Hello** — сервер выбирает алгоритм и отправляет сертификат
-3. **Certificate Verification** — клиент проверяет сертификат
-4. **Key Exchange** — обмен ключами шифрования
-5. **Encrypted Communication** — зашифрованная передача данных
-
-### Mixed Content
-
-```html
-<!-- ❌ Небезопасно на HTTPS странице -->
-<script src="http://example.com/script.js"></script>
-<img src="http://example.com/image.jpg">
-
-<!-- ✅ Безопасно -->
-<script src="https://example.com/script.js"></script>
-<img src="https://example.com/image.jpg">
-
-<!-- ✅ Protocol-relative URL -->
-<script src="//example.com/script.js"></script>
-```
+**TLS Handshake:**
+1. Client Hello
+2. Server Hello + Certificate
+3. Key Exchange
+4. Encrypted Communication
 
 ## REST API Best Practices
 
@@ -792,6 +608,276 @@ server {
 - Видео стриминг
 - Real-time приложения
 - Плохое качество сети (лучше обработка потерь)
+
+## WebSocket
+
+### Что такое WebSocket?
+
+WebSocket — протокол для двусторонней связи в реальном времени между клиентом и сервером.
+
+**Характеристики:**
+- 🔄 **Bidirectional** — двусторонняя связь
+- 🔌 **Persistent connection** — постоянное соединение
+- ⚡ **Low latency** — низкая задержка
+- 📡 **Full-duplex** — одновременная передача в обе стороны
+- 🔗 **Port 80/443** — как HTTP/HTTPS
+
+### WebSocket vs HTTP
+
+| Характеристика | HTTP | WebSocket |
+|----------------|------|-----------|
+| **Модель** | Request-Response | Bidirectional |
+| **Соединение** | Новое для каждого запроса | Постоянное |
+| **Overhead** | Большой (заголовки каждый раз) | Минимальный |
+| **Latency** | Выше | Ниже |
+| **Real-time** | Polling/Long-polling | Нативная поддержка |
+| **Использование** | REST API, веб-страницы | Чаты, игры, стриминг |
+
+### Установка WebSocket соединения
+
+```
+1. HTTP Upgrade Request:
+GET /chat HTTP/1.1
+Host: example.com
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==
+Sec-WebSocket-Version: 13
+
+2. Server Response:
+HTTP/1.1 101 Switching Protocols
+Upgrade: websocket
+Connection: Upgrade
+Sec-WebSocket-Accept: s3pPLMBiTxaQ9kYGzzhZRbK+xOo=
+
+3. WebSocket Connection Established
+```
+
+### Использование WebSocket
+
+```javascript
+// Клиент
+const ws = new WebSocket('wss://example.com/socket')
+
+ws.onopen = () => {
+  ws.send('Hello Server!')
+}
+
+ws.onmessage = (event) => {
+  console.log('Message:', event.data)
+}
+
+ws.onerror = (error) => {
+  console.error('Error:', error)
+}
+
+ws.onclose = () => {
+  console.log('Connection closed')
+}
+
+// Отправка данных
+ws.send(JSON.stringify({ type: 'chat', message: 'Hello' }))
+ws.close()
+
+// Сервер (Node.js)
+const WebSocket = require('ws')
+const wss = new WebSocket.Server({ port: 8080 })
+
+wss.on('connection', (ws) => {
+  ws.on('message', (data) => {
+    // Broadcast всем клиентам
+    wss.clients.forEach((client) => {
+      if (client.readyState === WebSocket.OPEN) {
+        client.send(data)
+      }
+    })
+  })
+})
+```
+
+### Когда использовать WebSocket
+
+✅ **Использовать:**
+- Чаты и мессенджеры
+- Онлайн игры
+- Real-time дашборды
+- Collaborative editing (Google Docs)
+- Live sports/stock updates
+- IoT устройства
+
+❌ **Не использовать:**
+- REST API (CRUD операции)
+- Загрузка файлов
+- Редкие обновления (используйте polling)
+- SEO важен (поисковики не индексируют WebSocket)
+
+## gRPC
+
+### Что такое gRPC?
+
+gRPC (Google Remote Procedure Call) — современный RPC фреймворк от Google для межсервисной коммуникации.
+
+**Характеристики:**
+- 🚀 **HTTP/2** — multiplexing, streaming
+- 📦 **Protocol Buffers** — бинарная сериализация
+- 🔄 **Bidirectional streaming** — потоки в обе стороны
+- 🌍 **Multi-language** — поддержка многих языков
+- ⚡ **High performance** — быстрее REST
+
+### gRPC vs REST
+
+| Характеристика | REST | gRPC |
+|----------------|------|------|
+| **Протокол** | HTTP/1.1 | HTTP/2 |
+| **Формат** | JSON (текст) | Protobuf (бинарный) |
+| **Производительность** | Медленнее | Быстрее |
+| **Streaming** | Нет (SSE отдельно) | Встроенный |
+| **Браузер** | Полная поддержка | Ограниченная (gRPC-Web) |
+| **Читаемость** | Легко читать | Нужны инструменты |
+| **Контракт** | OpenAPI (опционально) | .proto файлы (обязательно) |
+
+### Protocol Buffers (.proto)
+
+```protobuf
+// user.proto
+syntax = "proto3";
+
+package user;
+
+// Сообщения (структуры данных)
+message User {
+  int32 id = 1;
+  string name = 2;
+  string email = 3;
+  repeated string roles = 4;
+}
+
+message GetUserRequest {
+  int32 id = 1;
+}
+
+message ListUsersRequest {
+  int32 page = 1;
+  int32 limit = 2;
+}
+
+message ListUsersResponse {
+  repeated User users = 1;
+  int32 total = 2;
+}
+
+// Сервис (API)
+service UserService {
+  // Unary RPC (обычный запрос-ответ)
+  rpc GetUser(GetUserRequest) returns (User);
+  
+  // Server streaming (сервер отправляет поток)
+  rpc ListUsers(ListUsersRequest) returns (stream User);
+  
+  // Client streaming (клиент отправляет поток)
+  rpc CreateUsers(stream User) returns (ListUsersResponse);
+  
+  // Bidirectional streaming (оба отправляют потоки)
+  rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+}
+```
+
+### Использование gRPC
+
+```javascript
+// Сервер (Node.js)
+const grpc = require('@grpc/grpc-js')
+const protoLoader = require('@grpc/proto-loader')
+
+const packageDefinition = protoLoader.loadSync('user.proto')
+const userProto = grpc.loadPackageDefinition(packageDefinition).user
+
+const userService = {
+  getUser: (call, callback) => {
+    const user = { id: call.request.id, name: 'John' }
+    callback(null, user)
+  },
+  
+  listUsers: (call) => {
+    users.forEach(user => call.write(user))
+    call.end()
+  }
+}
+
+const server = new grpc.Server()
+server.addService(userProto.UserService.service, userService)
+server.bindAsync('0.0.0.0:50051', grpc.ServerCredentials.createInsecure())
+
+// Клиент
+const client = new userProto.UserService(
+  'localhost:50051',
+  grpc.credentials.createInsecure()
+)
+
+client.getUser({ id: 1 }, (error, user) => {
+  console.log('User:', user)
+})
+```
+
+### Типы RPC в gRPC
+
+**1. Unary RPC** — обычный запрос-ответ (как REST)
+
+```javascript
+rpc GetUser(GetUserRequest) returns (User);
+```
+
+**2. Server Streaming** — сервер отправляет поток данных
+
+```javascript
+rpc ListUsers(ListUsersRequest) returns (stream User);
+
+// Использование: real-time обновления, большие списки
+```
+
+**3. Client Streaming** — клиент отправляет поток данных
+
+```javascript
+rpc CreateUsers(stream User) returns (CreateUsersResponse);
+
+// Использование: загрузка файлов, batch операции
+```
+
+**4. Bidirectional Streaming** — оба отправляют потоки
+
+```javascript
+rpc Chat(stream ChatMessage) returns (stream ChatMessage);
+
+// Использование: чаты, онлайн игры
+```
+
+### Когда использовать gRPC
+
+✅ **Использовать:**
+- Микросервисы (service-to-service)
+- Real-time коммуникация
+- Высокая производительность критична
+- Polyglot окружение (разные языки)
+- Streaming данных
+- Mobile приложения (экономия трафика)
+
+❌ **Не использовать:**
+- Публичные API (REST проще)
+- Браузерные приложения (ограниченная поддержка)
+- Простые CRUD операции (REST достаточно)
+- Нужна читаемость запросов (JSON проще)
+
+### gRPC vs REST vs WebSocket
+
+| Характеристика | REST | gRPC | WebSocket |
+|----------------|------|------|-----------|
+| **Протокол** | HTTP/1.1 | HTTP/2 | TCP |
+| **Формат** | JSON | Protobuf | Любой |
+| **Модель** | Request-Response | RPC | Bidirectional |
+| **Streaming** | ❌ | ✅ | ✅ |
+| **Браузер** | ✅ | ⚠️ (gRPC-Web) | ✅ |
+| **Производительность** | Средняя | Высокая | Высокая |
+| **Использование** | Public API | Микросервисы | Real-time UI |
 
 ## Вопросы для собеседования
 
